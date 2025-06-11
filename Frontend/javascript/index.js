@@ -1,20 +1,37 @@
-const express = require('express');
-const cors = require('cors');
-const app = express();
+const formulario = document.getElementById("formularioCita");
+const listaCitas = document.getElementById("listaCitas");
 
-app.use(cors()); // permite que tu frontend acceda a esta API
-app.use(express.json());
+formulario.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const nombre = document.getElementById("nombre").value;
+  const fecha = document.getElementById("fecha").value;
 
-let citas = [];
+  const respuesta = await fetch("http://localhost:8080/api/citas", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ nombre, fecha })
+  });
 
-app.post('/api/citas', (req, res) => {
-  const cita = req.body;
-  citas.push(cita);
-  res.status(201).json({ mensaje: "Cita creada", cita });
+  if (respuesta.ok) {
+    alert("Cita guardada con éxito");
+    cargarCitas(); // Recargar lista
+  }
 });
 
-app.get('/api/citas', (req, res) => {
-  res.json(citas);
-});
+async function cargarCitas() {
+  const res = await fetch("http://localhost:8080/api/citas");
+  const citas = await res.json();
 
-app.listen(3000, () => console.log('API escuchando en http://localhost:3000'));
+  listaCitas.innerHTML = "";
+  citas.forEach(cita => {
+    const li = document.createElement("li");
+    li.textContent = `${cita.nombre} - ${cita.fecha}`;
+    listaCitas.appendChild(li);
+  });
+}
+
+// Cargar citas al iniciar
+cargarCitas();
